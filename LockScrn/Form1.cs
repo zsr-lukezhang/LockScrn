@@ -17,7 +17,7 @@ namespace LockScrn
             InitializeComponent();
             // 检查命令行参数
             string[] args = Environment.GetCommandLineArgs();
-            if (args.Contains("/Easy"))
+            if (args.Any(arg => arg.Equals("/easy", StringComparison.OrdinalIgnoreCase)))
             {
                 skipChecks = true;
             }
