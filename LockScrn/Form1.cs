@@ -3,6 +3,7 @@ using System.ComponentModel;
 using System.DirectoryServices.ActiveDirectory;
 using System.Runtime.InteropServices;
 using System.Windows.Forms;
+using System.IO; // 添加此行以进行文件操作
 
 namespace LockScrn
 {
@@ -10,6 +11,7 @@ namespace LockScrn
     {
         private NotifyIcon notifyIcon;
         private bool skipChecks = false; // 将 skipChecks 声明为类的成员变量
+        private bool skipMessagebox = false; // 添加此变量
         private ContextMenuStrip contextMenuStrip;
 
         public Form1()
@@ -22,7 +24,13 @@ namespace LockScrn
                 skipChecks = true;
             }
 
-            //可交换顺序（方式1）
+            // 检查文件是否存在
+            if (!File.Exists(@"C:\LockScrn\showMessagebox.lcrn"))
+            {
+                skipMessagebox = true;
+            }
+
+            //可交换顺序
             this.FormBorderStyle = FormBorderStyle.None;
             this.WindowState = FormWindowState.Maximized;
 
@@ -36,11 +44,14 @@ namespace LockScrn
             contextMenuStrip = new ContextMenuStrip();
             ToolStripMenuItem showItem = new ToolStripMenuItem("显示LockScrn");
             ToolStripMenuItem exitItem = new ToolStripMenuItem("退出LockScrn");
+            ToolStripMenuItem aboutItem = new ToolStripMenuItem("关于LockScrn"); // 添加关于选项
 
             showItem.Click += ShowItem_Click;
             exitItem.Click += ExitItem_Click;
+            aboutItem.Click += AboutItem_Click; // 添加关于选项的点击事件
 
             contextMenuStrip.Items.Add(showItem);
+            contextMenuStrip.Items.Add(aboutItem); // 将关于选项添加到菜单中
             contextMenuStrip.Items.Add(exitItem);
 
             notifyIcon.ContextMenuStrip = contextMenuStrip;
@@ -60,6 +71,11 @@ namespace LockScrn
         private void ExitItem_Click(object sender, EventArgs e)
         {
             Application.Exit();
+        }
+
+        private void AboutItem_Click(object sender, EventArgs e)
+        {
+            MessageBox.Show("LockScrn 黑屏实用应用程序\n版本 1.0\n作者：Luke Zhang\n官网及帮助文档：github.com/zsr-lukezhang/LockScrn", "关于 LockScrn", MessageBoxButtons.OK, MessageBoxIcon.Information);
         }
 
         // 导入相应的DLL命令
@@ -105,14 +121,48 @@ namespace LockScrn
                 return;
             }
 
-            DialogResult result1 = MessageBox.Show("", "", MessageBoxButtons.AbortRetryIgnore, MessageBoxIcon.Question);
-            DialogResult result2 = MessageBox.Show("", "", MessageBoxButtons.AbortRetryIgnore, MessageBoxIcon.Question);
-            DialogResult result3 = MessageBox.Show("", "", MessageBoxButtons.AbortRetryIgnore, MessageBoxIcon.Question);
-            DialogResult result4 = MessageBox.Show("", "", MessageBoxButtons.AbortRetryIgnore, MessageBoxIcon.Question);
-            DialogResult result5 = MessageBox.Show("", "", MessageBoxButtons.AbortRetryIgnore, MessageBoxIcon.Question);
-            DialogResult result6 = MessageBox.Show("", "", MessageBoxButtons.AbortRetryIgnore, MessageBoxIcon.Question);
-            DialogResult result7 = MessageBox.Show("", "", MessageBoxButtons.AbortRetryIgnore, MessageBoxIcon.Question);
-            if (result1 == DialogResult.Ignore && result2 == DialogResult.Retry && result3 == DialogResult.Ignore && result4 == DialogResult.Abort && result5 == DialogResult.Retry && result6 == DialogResult.Abort && result7 == DialogResult.Ignore)
+            if (skipMessagebox)
+            {
+                this.Visible = false;
+                ShowCursor(true);
+                notifyIcon.Visible = true;
+                e.Cancel = true;
+                return;
+            }
+
+            // 读取文件内容
+            string passwd1 = File.Exists(@"C:\LockScrn\Passwd\Passwd1.lcrn") ? File.ReadAllText(@"C:\LockScrn\Passwd\Passwd1.lcrn").Trim() : null;
+            string passwd2 = File.Exists(@"C:\LockScrn\Passwd\Passwd2.lcrn") ? File.ReadAllText(@"C:\LockScrn\Passwd\Passwd2.lcrn").Trim() : null;
+            string passwd3 = File.Exists(@"C:\LockScrn\Passwd\Passwd3.lcrn") ? File.ReadAllText(@"C:\LockScrn\Passwd\Passwd3.lcrn").Trim() : null;
+            string passwd4 = File.Exists(@"C:\LockScrn\Passwd\Passwd4.lcrn") ? File.ReadAllText(@"C:\LockScrn\Passwd\Passwd4.lcrn").Trim() : null;
+            string passwd5 = File.Exists(@"C:\LockScrn\Passwd\Passwd5.lcrn") ? File.ReadAllText(@"C:\LockScrn\Passwd\Passwd5.lcrn").Trim() : null;
+            string passwd6 = File.Exists(@"C:\LockScrn\Passwd\Passwd6.lcrn") ? File.ReadAllText(@"C:\LockScrn\Passwd\Passwd6.lcrn").Trim() : null;
+            string passwd7 = File.Exists(@"C:\LockScrn\Passwd\Passwd7.lcrn") ? File.ReadAllText(@"C:\LockScrn\Passwd\Passwd7.lcrn").Trim() : null;
+
+            // 验证文件内容是否为有效的 DialogResult 枚举值
+            DialogResult? expectedResult1 = IsValidDialogResult(passwd1) ? (DialogResult)Enum.Parse(typeof(DialogResult), passwd1) : (DialogResult?)null;
+            DialogResult? expectedResult2 = IsValidDialogResult(passwd2) ? (DialogResult)Enum.Parse(typeof(DialogResult), passwd2) : (DialogResult?)null;
+            DialogResult? expectedResult3 = IsValidDialogResult(passwd3) ? (DialogResult)Enum.Parse(typeof(DialogResult), passwd3) : (DialogResult?)null;
+            DialogResult? expectedResult4 = IsValidDialogResult(passwd4) ? (DialogResult)Enum.Parse(typeof(DialogResult), passwd4) : (DialogResult?)null;
+            DialogResult? expectedResult5 = IsValidDialogResult(passwd5) ? (DialogResult)Enum.Parse(typeof(DialogResult), passwd5) : (DialogResult?)null;
+            DialogResult? expectedResult6 = IsValidDialogResult(passwd6) ? (DialogResult)Enum.Parse(typeof(DialogResult), passwd6) : (DialogResult?)null;
+            DialogResult? expectedResult7 = IsValidDialogResult(passwd7) ? (DialogResult)Enum.Parse(typeof(DialogResult), passwd7) : (DialogResult?)null;
+
+            DialogResult result1 = expectedResult1.HasValue ? MessageBox.Show("", "", MessageBoxButtons.AbortRetryIgnore, MessageBoxIcon.Question) : DialogResult.None;
+            DialogResult result2 = expectedResult2.HasValue ? MessageBox.Show("", "", MessageBoxButtons.AbortRetryIgnore, MessageBoxIcon.Question) : DialogResult.None;
+            DialogResult result3 = expectedResult3.HasValue ? MessageBox.Show("", "", MessageBoxButtons.AbortRetryIgnore, MessageBoxIcon.Question) : DialogResult.None;
+            DialogResult result4 = expectedResult4.HasValue ? MessageBox.Show("", "", MessageBoxButtons.AbortRetryIgnore, MessageBoxIcon.Question) : DialogResult.None;
+            DialogResult result5 = expectedResult5.HasValue ? MessageBox.Show("", "", MessageBoxButtons.AbortRetryIgnore, MessageBoxIcon.Question) : DialogResult.None;
+            DialogResult result6 = expectedResult6.HasValue ? MessageBox.Show("", "", MessageBoxButtons.AbortRetryIgnore, MessageBoxIcon.Question) : DialogResult.None;
+            DialogResult result7 = expectedResult7.HasValue ? MessageBox.Show("", "", MessageBoxButtons.AbortRetryIgnore, MessageBoxIcon.Question) : DialogResult.None;
+
+            if ((!expectedResult1.HasValue || result1 == expectedResult1) &&
+                (!expectedResult2.HasValue || result2 == expectedResult2) &&
+                (!expectedResult3.HasValue || result3 == expectedResult3) &&
+                (!expectedResult4.HasValue || result4 == expectedResult4) &&
+                (!expectedResult5.HasValue || result5 == expectedResult5) &&
+                (!expectedResult6.HasValue || result6 == expectedResult6) &&
+                (!expectedResult7.HasValue || result7 == expectedResult7))
             {
                 MessageBox.Show("", "", MessageBoxButtons.OK, MessageBoxIcon.Information);
                 this.Visible = false;
@@ -125,6 +175,11 @@ namespace LockScrn
                 MessageBox.Show("", "", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 e.Cancel = true;
             }
+        }
+
+        private bool IsValidDialogResult(string value)
+        {
+            return Enum.IsDefined(typeof(DialogResult), value);
         }
     }
 }
