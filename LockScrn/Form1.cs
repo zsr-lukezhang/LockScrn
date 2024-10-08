@@ -4,6 +4,7 @@ using System.DirectoryServices.ActiveDirectory;
 using System.Runtime.InteropServices;
 using System.Windows.Forms;
 using System.IO; // 添加此行以进行文件操作
+using System.Diagnostics; // 这是判断实例的
 
 namespace LockScrn
 {
@@ -14,20 +15,64 @@ namespace LockScrn
         private bool skipMessagebox = false; // 添加此变量
         private ContextMenuStrip contextMenuStrip;
 
+        private bool IsValidDialogResult(string? value)
+        {
+            return value != null && Enum.IsDefined(typeof(DialogResult), value);
+        }
+
+
+        private bool IsAlreadyRunning()
+        {
+            Process currentProcess = Process.GetCurrentProcess();
+            Process[] processes = Process.GetProcessesByName(currentProcess.ProcessName);
+            return processes.Length > 1;
+        }
+
+        private string currentMode = "Normal Mode"; // 添加变量来存储当前模式
+
+        private string activeModes = ""; // 添加变量来存储激活的模式
+
         public Form1()
         {
             InitializeComponent();
+
+            // 检查是否已有其他实例在运行
+            if (IsAlreadyRunning())
+            {
+                MessageBox.Show("已有一个实例在运行。", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                Application.Exit();
+                return;
+            }
+
             // 检查命令行参数
             string[] args = Environment.GetCommandLineArgs();
             if (args.Any(arg => arg.Equals("/easy", StringComparison.OrdinalIgnoreCase)))
             {
                 skipChecks = true;
+                activeModes += "Easy Mode, "; // 添加激活的模式
+            }
+            if (args.Any(arg => arg.Equals("/ShowCursor", StringComparison.OrdinalIgnoreCase)))
+            {
+                ShowCursor(true);
+                activeModes += "Show Cursor, "; // 添加激活的模式
             }
 
             // 检查文件是否存在
             if (!File.Exists(@"C:\LockScrn\showMessagebox.lcrn"))
             {
                 skipMessagebox = true;
+                activeModes += "No Password, "; // 添加激活的模式
+            }
+
+            // 如果没有任何模式被激活，则添加默认模式
+            if (string.IsNullOrEmpty(activeModes))
+            {
+                activeModes = "Normal Mode";
+            }
+            else
+            {
+                // 移除最后一个逗号和空格
+                activeModes = activeModes.TrimEnd(',', ' ');
             }
 
             //可交换顺序
@@ -58,6 +103,10 @@ namespace LockScrn
             notifyIcon.MouseClick += NotifyIcon_MouseClick;
         }
 
+
+
+
+
         private void ShowItem_Click(object sender, EventArgs e)
         {
             this.Show();
@@ -75,8 +124,10 @@ namespace LockScrn
 
         private void AboutItem_Click(object sender, EventArgs e)
         {
-            MessageBox.Show("LockScrn 黑屏实用应用程序\n版本 1.0\n作者：Luke Zhang\n官网及帮助文档：github.com/zsr-lukezhang/LockScrn", "关于 LockScrn", MessageBoxButtons.OK, MessageBoxIcon.Information);
+            MessageBox.Show($"LockScrn 黑屏实用应用程序\n版本 1.0\n作者：Luke Zhang\n官网及帮助文档：github.com/zsr-lukezhang/LockScrn\n当前模式：{currentMode}", "关于 LockScrn", MessageBoxButtons.OK, MessageBoxIcon.Information);
         }
+
+
 
         // 导入相应的DLL命令
         [DllImport("user32", EntryPoint = "ShowCursor")]
@@ -175,11 +226,6 @@ namespace LockScrn
                 MessageBox.Show("", "", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 e.Cancel = true;
             }
-        }
-
-        private bool IsValidDialogResult(string value)
-        {
-            return Enum.IsDefined(typeof(DialogResult), value);
         }
     }
 }
