@@ -28,8 +28,6 @@ namespace LockScrn
             return processes.Length > 1;
         }
 
-        private string currentMode = "Normal Mode"; // 添加变量来存储当前模式
-
         private string activeModes = ""; // 添加变量来存储激活的模式
 
         public Form1()
@@ -51,7 +49,7 @@ namespace LockScrn
                 skipChecks = true;
                 activeModes += "Easy Mode, "; // 添加激活的模式
             }
-            if (args.Any(arg => arg.Equals("/ShowCursor", StringComparison.OrdinalIgnoreCase)))
+            if (args.Any(arg => arg.Equals("/showcursor", StringComparison.OrdinalIgnoreCase)))
             {
                 ShowCursor(true);
                 activeModes += "Show Cursor, "; // 添加激活的模式
@@ -64,15 +62,23 @@ namespace LockScrn
                 activeModes += "No Password, "; // 添加激活的模式
             }
 
-            // 如果没有任何模式被激活，则添加默认模式
-            if (string.IsNullOrEmpty(activeModes))
+            // 如果同时满足 No Password 和 Show Cursor 条件，则显示 Easy Mode
+            if (skipMessagebox && activeModes.Contains("Show Cursor"))
             {
-                activeModes = "Normal Mode";
+                activeModes = "Easy Mode";
             }
             else
             {
-                // 移除最后一个逗号和空格
-                activeModes = activeModes.TrimEnd(',', ' ');
+                // 如果没有任何模式被激活，则添加默认模式
+                if (string.IsNullOrEmpty(activeModes))
+                {
+                    activeModes = "Normal Mode";
+                }
+                else
+                {
+                    // 移除最后一个逗号和空格
+                    activeModes = activeModes.TrimEnd(',', ' ');
+                }
             }
 
             //可交换顺序
@@ -105,8 +111,6 @@ namespace LockScrn
 
 
 
-
-
         private void ShowItem_Click(object sender, EventArgs e)
         {
             this.Show();
@@ -124,9 +128,8 @@ namespace LockScrn
 
         private void AboutItem_Click(object sender, EventArgs e)
         {
-            MessageBox.Show($"LockScrn 黑屏实用应用程序\n版本 1.0\n作者：Luke Zhang\n官网及帮助文档：github.com/zsr-lukezhang/LockScrn\n当前模式：{currentMode}", "关于 LockScrn", MessageBoxButtons.OK, MessageBoxIcon.Information);
+            MessageBox.Show($"LockScrn 黑屏实用应用程序\n版本 1.0\n作者：Luke Zhang\n官网及帮助文档：github.com/zsr-lukezhang/LockScrn\n当前模式：{activeModes}", "关于 LockScrn", MessageBoxButtons.OK, MessageBoxIcon.Information);
         }
-
 
 
         // 导入相应的DLL命令
