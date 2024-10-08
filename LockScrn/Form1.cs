@@ -38,7 +38,7 @@ namespace LockScrn
             if (IsAlreadyRunning())
             {
                 MessageBox.Show("已有一个实例在运行。", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                Application.Exit();
+                Environment.Exit(0);
                 return;
             }
 
@@ -64,6 +64,12 @@ namespace LockScrn
 
             // 如果同时满足 No Password 和 Show Cursor 条件，则显示 Easy Mode
             if (skipMessagebox && activeModes.Contains("Show Cursor"))
+            {
+                activeModes = "Easy Mode";
+            }
+            
+            // 如果同时满足 No Password 和 Easy Mode 条件，则显示 Easy Mode
+            if (skipMessagebox && activeModes.Contains("Easy Mode"))
             {
                 activeModes = "Easy Mode";
             }
