@@ -1,3 +1,13 @@
+//
+//
+//                                                  LockScrn v1.0!
+//                                                    2024/10/08
+//                                                    Luke Zhang
+//                                                admin@lukezhang.win
+//
+//
+
+
 using Microsoft.VisualBasic;
 using System.ComponentModel;
 using System.DirectoryServices.ActiveDirectory;
